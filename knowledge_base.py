@@ -127,9 +127,20 @@ def generate_ground_kb_from_file(file_path: str) -> Optional[Tuple[KnowledgeBase
     try:
         with open(file_path, 'r') as f:
             lines = [line.strip() for line in f if line.strip() and not line.startswith('#')]
-        N = len(lines[0].split(','))
-        kb, assignment, line_idx = KnowledgeBase(N), {}, 0
+            
+        # --- BẢN VÁ ĐỌC FILE ---
+        # Kiểm tra nếu dòng đầu tiên chỉ có 1 số nguyên (ví dụ: '4')
+        if len(lines[0].split(',')) == 1:
+            N = int(lines[0])
+            line_idx = 1 # Bắt đầu đọc ma trận Grid từ dòng thứ 2 (index 1)
+        else:
+            N = len(lines[0].split(','))
+            line_idx = 0 # Định dạng cũ: Không có N ở đầu, đọc Grid ngay dòng 1
+        # ------------------------
         
+        kb, assignment = KnowledgeBase(N), {}
+        
+        # 1. Đọc Grid
         for r in range(N):
             values = list(map(int, lines[line_idx].split(',')))
             for c in range(N):
@@ -138,6 +149,7 @@ def generate_ground_kb_from_file(file_path: str) -> Optional[Tuple[KnowledgeBase
                     assignment[(r, c)] = values[c]
             line_idx += 1
             
+        # 2. Đọc Horizontal Constraints
         for r in range(N):
             constraints = list(map(int, lines[line_idx].split(',')))
             for c in range(N - 1):
@@ -145,6 +157,7 @@ def generate_ground_kb_from_file(file_path: str) -> Optional[Tuple[KnowledgeBase
                 elif constraints[c] == -1: kb.add_fact("GreaterH", r, c)
             line_idx += 1
             
+        # 3. Đọc Vertical Constraints
         for r in range(N - 1):
             constraints = list(map(int, lines[line_idx].split(',')))
             for c in range(N):
