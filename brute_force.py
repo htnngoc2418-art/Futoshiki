@@ -2,8 +2,7 @@ import time
 from typing import Optional, Callable
 from core.knowledge_base import KnowledgeBase, generate_full_ground_kb, generate_ground_kb_from_file, format_board
 
-class BruteForceSolver:
-    """Thuật toán Brute Force thuần túy cho Futoshiki."""
+class FutoshikiSolver:
     def __init__(self, kb: KnowledgeBase, initial_assignment: dict):
         self.kb = kb
         self.assignment = initial_assignment.copy()
@@ -15,7 +14,6 @@ class BruteForceSolver:
         self.last_report_time = None
 
     def _validate_full_board(self) -> bool:
-        """Kiểm tra toàn bộ ràng buộc khi bảng đã điền đầy."""
         for row in range(self.kb.N):
             for col in range(self.kb.N):
                 v = self.assignment.get((row, col))
@@ -28,7 +26,6 @@ class BruteForceSolver:
         return True
     
     def _report_progress(self):
-        """In báo cáo tiến độ mỗi 1 giây."""
         current_time = time.time()
         if self.last_report_time is None or (current_time - self.last_report_time) >= 1.0:
             elapsed = current_time - self.start_time
@@ -37,27 +34,21 @@ class BruteForceSolver:
 
     def brute_force(self, r: int = 0, c: int = 0,
                     on_update: Optional[Callable[[int, int, int, str], None]] = None) -> bool:
-        """Brute Force thuần túy: Thử tất cả giá trị, điền bảng, validate khi đầy."""
-        # Tính độ sâu hiện tại
+
         depth = r * self.kb.N + c
         self.max_depth = max(self.max_depth, depth)
         
-        # Báo cáo tiến độ
         self._report_progress()
         
-        # Nếu điền xong tất cả ô → validate toàn bộ
         if r == self.kb.N:
             return self._validate_full_board()
 
-        # Sang hàng tiếp theo nếu hết cột
         if c == self.kb.N:
             return self.brute_force(r + 1, 0, on_update)
 
-        # Bỏ qua ô đã có sẵn (clue)
         if (r, c) in self.assignment:
             return self.brute_force(r, c + 1, on_update)
 
-        # Thử tất cả giá trị từ 1 đến N
         for v in range(1, self.kb.N + 1):
             self.attempts += 1
             self.assignment[(r, c)] = v
@@ -73,12 +64,9 @@ class BruteForceSolver:
             del self.assignment[(r, c)]
             if on_update: 
                 on_update(r, c, 0, "BACKTRACK")
-
         return False
 
-
 def cli_update_viewer(r: int, c: int, v: int, status: str):
-    """Giao diện dòng lệnh cập nhật log."""
     if status == "TRYING":
         print(f"Trying Cell({r}, {c}) = {v}")
     elif status == "BACKTRACK":
@@ -98,7 +86,7 @@ def main():
 
     if result:
         kb, initial_assignment = result
-        solver = BruteForceSolver(kb, initial_assignment)
+        solver = FutoshikiSolver(kb, initial_assignment)
 
         print(f"Puzzle size: {kb.N}x{kb.N}")
         print(f"Clues given: {len(initial_assignment)}")
