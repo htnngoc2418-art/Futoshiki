@@ -1,6 +1,6 @@
 import time
 from typing import Optional, Callable
-from core.knowledge_base import KnowledgeBase, generate_full_ground_kb, generate_ground_kb_from_file, format_board
+from knowledge_base import KnowledgeBase, generate_full_ground_kb, generate_ground_kb_from_file, format_board
 
 class FutoshikiSolver:
     def __init__(self, kb: KnowledgeBase, initial_assignment: dict):
