@@ -114,10 +114,11 @@ class Node:
         return self.f < other.f or (self.f == other.f and self.g > other.g)
 
 
-class AStarSolver:
+class FutoshikiSolver: # ĐÃ ĐỔI TÊN THÀNH FutoshikiSolver ĐỂ KHỚP VỚI GUI
     def __init__(self, kb: KnowledgeBase, initial_assignment: dict):
         self.kb = kb
         self.initial_assignment = initial_assignment.copy()
+        self.assignment = initial_assignment.copy() # THÊM DÒNG NÀY CHO GUI ĐỌC KẾT QUẢ
         self.nodes_expanded = 0
 
     def _mrv(self, assignment: dict, domains: dict) -> Optional[tuple]:
@@ -125,7 +126,7 @@ class AStarSolver:
                  if (r, c) not in assignment]
         return min(cells, key=lambda cell: len(domains[cell]), default=None)
 
-    def solve(self, on_update=None) -> Optional[dict]:
+    def solve(self, on_update=None) -> bool: # ĐỔI RETURN TYPE THÀNH BOOL
         kb = self.kb
         total = kb.N * kb.N
         h0 = heuristic(kb, self.initial_assignment)
@@ -144,7 +145,8 @@ class AStarSolver:
             self.nodes_expanded += 1
 
             if len(cur.assignment) == total:
-                return cur.assignment
+                self.assignment = cur.assignment # LƯU KẾT QUẢ VÀO SELF ĐỂ GUI LẤY ĐƯỢC
+                return True # TRẢ VỀ TRUE KHI THÀNH CÔNG
 
             domains = compute_domains(kb, cur.assignment)
             if not ac3(kb, domains):
@@ -165,14 +167,19 @@ class AStarSolver:
                 node = Node(new_assign, cur.g + 1, new_h)
                 if frozenset(new_assign.items()) not in visited:
                     heapq.heappush(heap, (node.f, node))
+                    
                     if on_update:
-                        on_update(r, c, v, node.g, new_h, node.f)
+                        # KIỂM TRA ĐỂ TƯƠNG THÍCH CẢ TERMINAL (6 THAM SỐ) LẪN GUI (4 THAM SỐ)
+                        try:
+                            on_update(r, c, v, "TRYING") 
+                        except TypeError:
+                            on_update(r, c, v, node.g, new_h, node.f)
 
-        return None
+        return False
 
 
 def main():
-    input_file  = "input-01.txt"
+    input_file  = "input.txt"
     output_file = "output-01-astar.txt"
 
     print("=" * 55)
@@ -184,10 +191,10 @@ def main():
         print(f"Cannot read: {input_file}"); return
 
     kb, init = result
-    solver = AStarSolver(kb, init)
+    solver = FutoshikiSolver(kb, init)
 
     start = time.time()
-    solution = solver.solve(
+    solution_found = solver.solve(
         on_update=lambda r, c, v, g, h, f:
             print(f"  Cell({r},{c})={v}  g={g}  h={h:.0f}  f={f:.0f}")
     )
@@ -195,8 +202,10 @@ def main():
 
     print(f"\nTime: {elapsed:.4f}s  |  Nodes expanded: {solver.nodes_expanded}")
 
-    if solution:
-        board = format_board(kb, solution)
+    # Thay đổi biến 'solution' thành 'solver.assignment' khi truyền vào format_board
+    if solution_found:
+        # Lấy kết quả từ solver.assignment thay vì biến solution (vốn là True/False)
+        board = format_board(kb, solver.assignment) 
         print("\n--- Solved! ---\n" + board)
         with open(output_file, 'w') as f:
             f.write(board + "\n")
