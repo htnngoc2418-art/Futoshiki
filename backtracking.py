@@ -1,31 +1,31 @@
 import time
-from typing import List, Callable, Optional
-from knowledge_base import KnowledgeBase, generate_full_ground_kb, generate_ground_kb_from_file, format_board
+from typing import Optional, Callable
+from core.knowledge_base import KnowledgeBase, generate_full_ground_kb, generate_ground_kb_from_file, format_board
 
-class BacktrackingSolver:
+class FutoshikiSolver:
     def __init__(self, kb: KnowledgeBase, initial_assignment: dict):
         self.kb = kb
         self.assignment = initial_assignment.copy()
+        self.attempts = 0
+        self.backtracks = 0
+        self.max_depth = 0
+        self.start_time = None
+        self.last_report_time = None
 
-    def prolog_query_deep(self, r: int, c: int) -> List[int]:
-        valid_answers = []
-        if (r, c) in self.assignment:
-            return [self.assignment[(r, c)]]
-
-        backup_assignment = self.assignment.copy()
-
-        for v in range(1, self.kb.N + 1):
-            if self.kb.is_consistent_with_rules(r, c, v, self.assignment):
-                self.assignment[(r, c)] = v
-
-                if self.backtracking(0, 0, on_update=None):
-                    valid_answers.append(v)
-                self.assignment = backup_assignment.copy()
-
-        return valid_answers
+    def _report_progress(self):
+        current_time = time.time()
+        if self.last_report_time is None or (current_time - self.last_report_time) >= 1.0:
+            elapsed = current_time - self.start_time
+            print(f"[{elapsed:6.1f}s] Attempts: {self.attempts:,} | Backtracks: {self.backtracks:,}")
+            self.last_report_time = current_time
 
     def backtracking(self, r: int = 0, c: int = 0,
                      on_update: Optional[Callable[[int, int, int, str], None]] = None) -> bool:
+        depth = r * self.kb.N + c
+        self.max_depth = max(self.max_depth, depth)
+
+        self._report_progress()
+
         if r == self.kb.N:
             return True
 
@@ -36,70 +36,79 @@ class BacktrackingSolver:
             return self.backtracking(r, c + 1, on_update)
 
         for v in range(1, self.kb.N + 1):
+            self.attempts += 1
+
             if self.kb.is_consistent_with_rules(r, c, v, self.assignment):
                 self.assignment[(r, c)] = v
-
-                if on_update: on_update(r, c, v, "TRYING")
+                if on_update:
+                    on_update(r, c, v, "TRYING")
 
                 if self.backtracking(r, c + 1, on_update):
                     return True
 
+                self.backtracks += 1
                 del self.assignment[(r, c)]
-
-                if on_update: on_update(r, c, 0, "BACKTRACK")
+                if on_update:
+                    on_update(r, c, 0, "BACKTRACK")
 
         return False
 
 
 def cli_update_viewer(r: int, c: int, v: int, status: str):
     if status == "TRYING":
-        print(f"Assigning Cell({r}, {c}) = {v}")
+        print(f"Trying Cell({r}, {c}) = {v}")
     elif status == "BACKTRACK":
-        print(f"Conflict! Backtracking Cell({r}, {c})")
+        print(f"Backtrack Cell({r}, {c})")
+
 
 def main():
     input_file = "input-01.txt"
     output_file = "output-01.txt"
 
-    print("=" * 65)
+    print("=" * 80)
     print("FUTOSHIKI SOLVER - BACKTRACKING")
-    print("=" * 65)
+    print("=" * 80)
 
-    cnf_kb = generate_full_ground_kb(N=4, output_file="ground_kb_4x4.txt")
-    print(f"-> Generated {len(cnf_kb)} complete CNF clauses (including inequalities).")
-    print("-" * 65)
-
-    print(f"Parsing Input File '{input_file}'...")
+    print(f"\nParsing input file: {input_file}")
     result = generate_ground_kb_from_file(input_file)
 
     if result:
         kb, initial_assignment = result
-        solver = BacktrackingSolver(kb, initial_assignment)
+        solver = FutoshikiSolver(kb, initial_assignment)
 
-        print("\n[Deep Backtracking Demo] Querying empty cell (0, 0): ?- Val(0, 0, X)")
-        deep_answers = solver.prolog_query_deep(0, 0)
-        print(f"-> Backtracking Engine proven answers (leads to solution): X = {deep_answers}")
-        print("-" * 65)
+        print(f"Puzzle size: {kb.N}x{kb.N}")
+        print(f"Clues given: {len(initial_assignment)}")
+        print(f"Empty cells: {kb.N * kb.N - len(initial_assignment)}")
+        print(f"\nStarting Backtracking solver...\n")
 
-        print("\nStarting full Backtracking...\n")
-        start_time = time.time()
-        success = solver.backtracking(on_update=cli_update_viewer)
+        solver.start_time = time.time()
+        solver.last_report_time = solver.start_time
+        success = solver.backtracking(on_update=None)
         end_time = time.time()
+        elapsed = end_time - solver.start_time
+
+        print("\n" + "=" * 80)
+        if success:
+            print(f"✓ SOLVED in {elapsed:.4f} seconds")
+        else:
+            print(f"✗ FAILED in {elapsed:.4f} seconds")
+
+        print(f"Total attempts: {solver.attempts:,}")
+        print(f"Total backtracks: {solver.backtracks:,}")
+        print("=" * 80)
 
         if success:
-            print(f"\nExecution time: {end_time - start_time:.4f} seconds")
-            print("\n--- Solved Successfully! ---")
+            print("\n--- Solution Found ---")
             formatted_output = format_board(kb, solver.assignment)
             print(formatted_output)
 
             with open(output_file, 'w') as f:
                 f.write(formatted_output + "\n")
-            print(f"\nSaved to {output_file}")
+            print(f"\nSaved to: {output_file}")
         else:
-            print(f"\nExecution time: {end_time - start_time:.4f} seconds")
-            print("\n[!] ERROR: No solution exists for this puzzle.")
-            print("Current partial assignment state before total failure:")
-            print(format_board(kb, solver.assignment))
+            print("\n[ERROR] No solution found for this puzzle.")
+    else:
+        print(f"[ERROR] Failed to parse {input_file}")
 
 if __name__ == "__main__":
     main()
