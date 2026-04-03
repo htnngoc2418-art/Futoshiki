@@ -21,6 +21,9 @@ class FutoshikiSolver:
 
     def backtracking(self, r: int = 0, c: int = 0,
                      on_update: Optional[Callable[[int, int, int, str], None]] = None) -> bool:
+        if self.start_time is None:
+            self.start_time = time.time()
+            self.last_report_time = self.start_time
         depth = r * self.kb.N + c
         self.max_depth = max(self.max_depth, depth)
 
