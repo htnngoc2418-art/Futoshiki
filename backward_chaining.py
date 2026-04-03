@@ -78,10 +78,9 @@ class FutoshikiSolver:
                 self.assignment[(r, c)] = v
 
                 if self.propagate_constraints(r, c, v):
-                   
-                    if self.backward_chain("solve_board", on_update):
+                 
+                    if self.backward_chain("solve_board", on_update): 
                         return True
-
       
                 self.assignment = backup_assign
                 self.domains = backup_domains
