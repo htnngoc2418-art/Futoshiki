@@ -1,4 +1,4 @@
-﻿import time
+import time
 from typing import Optional, Callable
 from knowledge_base import KnowledgeBase, generate_ground_kb_from_file, format_board
 
@@ -12,6 +12,7 @@ class FutoshikiSolver:
         self.domains = {(r, c): set(range(1, self.N + 1)) for r in range(self.N) for c in range(self.N)}
         self.agenda = []
         self.inferences = 0
+        self.fc_initialized = False 
 
     def remove_value(self, r, c, v_to_remove) -> bool:
         if v_to_remove in self.domains[(r, c)]:
@@ -38,26 +39,29 @@ class FutoshikiSolver:
             if v >= max_v2:
                 if self.remove_value(r1, c1, v): local_changed = True
                 
+        if not self.domains[(r1, c1)]:
+            return local_changed
+                
         min_v1 = min(self.domains[(r1, c1)])
         for v in list(self.domains[(r2, c2)]):
             if v <= min_v1:
                 if self.remove_value(r2, c2, v): local_changed = True
                 
         return local_changed
-
     def forward_chaining(self, on_update: Optional[Callable[[int, int, int, str], None]] = None) -> bool:
-        for r in range(self.N):
-            for c in range(self.N):
-                if (r, c) in self.initial_assignment:
-                    v_given = self.initial_assignment[(r, c)]
-                    self.domains[(r, c)] = {v_given}
-                    self.agenda.append(("ASSIGN", r, c, v_given))
+        if not self.fc_initialized:
+            for r in range(self.N):
+                for c in range(self.N):
+                    if (r, c) in self.initial_assignment:
+                        v_given = self.initial_assignment[(r, c)]
+                        self.domains[(r, c)] = {v_given}
+                        self.agenda.append(("ASSIGN", r, c, v_given))
+            self.fc_initialized = True
 
         global_changed = True
         
         while global_changed or self.agenda:
             global_changed = False
-            
             
             while self.agenda:
                 _, r, c, v = self.agenda.pop(0)
@@ -111,7 +115,7 @@ class FutoshikiSolver:
                                         if c3 != c1 and c3 != c2:
                                             for val in pair_vals:
                                                 if self.remove_value(r, c3, val): global_changed = True
-                   
+                    
                     for c1 in range(self.N):
                         for c2 in range(c1 + 1, self.N):
                             for c3 in range(c2 + 1, self.N):
@@ -177,14 +181,62 @@ class FutoshikiSolver:
 
         return len(self.assignment) == self.N * self.N
 
+    def backtrack(self, on_update: Optional[Callable[[int, int, int, str], None]] = None) -> bool:
+        for r in range(self.N):
+            for c in range(self.N):
+                if not self.domains[(r, c)]:
+                    return False
+
+        if len(self.assignment) == self.N * self.N:
+            return True
+
+        unassigned = [(r, c) for r in range(self.N) for c in range(self.N) if (r, c) not in self.assignment]
+        unassigned.sort(key=lambda cell: len(self.domains[cell]))
+        
+        if not unassigned:
+            return True
+            
+        r, c = unassigned[0]
+
+        for val in list(self.domains[(r, c)]):
+            if on_update: on_update(r, c, val, "BACKTRACK_GUESS")
+            
+            saved_domains = {k: v.copy() for k, v in self.domains.items()}
+            saved_assignment = self.assignment.copy()
+            saved_agenda = self.agenda.copy()
+            
+            self.domains[(r, c)] = {val}
+            self.agenda.append(("ASSIGN", r, c, val))
+            
+            self.forward_chaining(on_update)
+            
+            if self.backtrack(on_update):
+                return True
+                
+            self.domains = saved_domains
+            self.assignment = saved_assignment
+            self.agenda = saved_agenda
+            if on_update: on_update(r, c, val, "BACKTRACK_UNDO")
+
+        return False
+
+    def solve(self, on_update: Optional[Callable[[int, int, int, str], None]] = None) -> bool:
+        self.forward_chaining(on_update)
+        return self.backtrack(on_update)
+
+
 def cli_update_viewer(r: int, c: int, v: int, status: str):
     if status == "TRYING":
         print(f"-> Logic suy ra: Cell({r}, {c}) = {v}")
+    elif status == "BACKTRACK_GUESS":
+        print(f"-> Sử dụng backtracking: Cell({r}, {c}) = {v}")
+    elif status == "BACKTRACK_UNDO":
+        print(f"-> Sai logic, quay lui (Undo): Cell({r}, {c}) != {v}")
 
 def main():
-    input_file = "input-01.txt"
+    input_file = "input-1.txt"
     print("=" * 65)
-    print("FUTOSHIKI SOLVER - FORWARD CHAINING (RULE-BASED INFERENCE)")
+    print("FUTOSHIKI SOLVER - FORWARD CHAINING + BACKTRACKING")
     print("=" * 65)
 
     result = generate_ground_kb_from_file(input_file)
@@ -192,9 +244,10 @@ def main():
         kb, initial_assignment = result
         solver = FutoshikiSolver(kb, initial_assignment)
 
-        print("\nStarting Forward Chaining...\n")
+        print("\nStarting Solver...\n")
         start_time = time.time()
-        success = solver.forward_chaining(on_update=cli_update_viewer)
+        
+        success = solver.solve(on_update=cli_update_viewer)
         end_time = time.time()
 
         if success:
@@ -203,7 +256,7 @@ def main():
             print("\n--- Solved Successfully! ---")
             print(format_board(kb, solver.assignment))
         else:
-            print("\n[!] ERROR/STUCK: Forward Chaining không thể giải hết bảng chỉ bằng luật logic.")
+            print("\nERROR/STUCK: Không thể tìm ra nghiệm. Khả năng bảng không hợp lệ.")
             print(format_board(kb, solver.assignment))
 
 if __name__ == "__main__":
