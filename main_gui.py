@@ -17,7 +17,10 @@ class FutoshikiGUI:
         self.root.resizable(True, True) 
         
         self.base_dir = os.path.dirname(os.path.abspath(__file__))
-        
+        self.inputs_dir = os.path.join(self.base_dir, "inputs")
+        self.outputs_dir = os.path.join(self.base_dir, "outputs")
+        os.makedirs(self.inputs_dir, exist_ok=True)
+        os.makedirs(self.outputs_dir, exist_ok=True)
       
         self.bg_soft_blue = "#F0F9FF"   
         self.card_bg = "#FFFFFF"        
@@ -55,7 +58,7 @@ class FutoshikiGUI:
 
         from knowledge_base import generate_ground_kb_from_file
 
-        raw_files = [f for f in os.listdir(self.base_dir) if f.startswith('input') and f.endswith('.txt')]
+        raw_files = [f for f in os.listdir(self.inputs_dir) if f.startswith('input') and f.endswith('.txt')]
         raw_files.sort()
         
         difficulty_map = {
@@ -107,7 +110,7 @@ class FutoshikiGUI:
         if raw_selection == "Chưa có file": return
         
         file_name = raw_selection.split(' ')[0]
-        file_path = os.path.join(self.base_dir, file_name)
+        file_path = os.path.join(self.inputs_dir, file_name)
         result = generate_ground_kb_from_file(file_path)
         
         if not result: return
@@ -250,7 +253,7 @@ class FutoshikiGUI:
             raw_selection = self.file_var.get()
             input_name = raw_selection.split(' ')[0]
             output_name = input_name.replace("input", "output")
-            output_path = os.path.join(self.base_dir, output_name)
+            output_path = os.path.join(self.outputs_dir, output_name)
            
             board_str = format_board(self.kb, solver.assignment)
             with open(output_path, "w", encoding="utf-8") as f:
