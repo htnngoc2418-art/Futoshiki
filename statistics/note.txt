@@ -2,5 +2,13 @@
 Đối với những số liệu có giá trị 0.0, thuật toán đã vượt timeout (120s) nên giá trị không được tính vào, không phải là thời gian giải bài toán là xấp xỉ 0s.
 
 - Đơn vị:
-Thời gian chạy: giây(s)
-Bộ nhớ sử dụng: KB
+Thời gian chạy: giây(s).
+Bộ nhớ sử dụng: KB.
+
+- File run_statistics.py: 
+Sau khi hoàn thành tất cả sẽ xuất ra các file csv, tên là kích thước bảng (4x4, 5x5,....).
+File đang giải Futoshiki ở dạng các thuật toán thuần, với các testcase thông thường, không khó (input1 - input10).
+
+- Các file kết quả là các file đã gộp từ 4x4.csv, 5x5.csv,.....
+
+- Sau khi chạy file visualization.py, các biểu đổ sẽ được lưu vào thư mục statistics/charts.
