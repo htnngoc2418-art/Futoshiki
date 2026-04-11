@@ -22,19 +22,19 @@ from algorithms.a_star import FutoshikiSolver as AStarSolver
 ALGORITHMS = {
     "brute_force": (BruteForceSolver, "brute_force"),
     "backtracking": (BacktrackingSolver, "backtracking"),
-    "forward_chaining": (ForwardChainingSolver, "solve"),
+    "forward_chaining": (ForwardChainingSolver, "forward_chaining"),
     "backward_chaining": (BackwardChainingSolver, "backward_chaining"),
     "a_star": (AStarSolver, "solve"),
 }
 
 TIME_LIMIT = 120.0
 SMALL_INPUTS = [
-    ("4x4", ["input-01.txt", "input-02.txt", "input-03.txt", "input-11.txt"]),
-    ("5x5", ["input-04.txt", "input-05.txt", "input-12.txt"]),
+    ("4x4", ["input-01.txt", "input-02.txt", "input-03.txt"]),
+    ("5x5", ["input-04.txt", "input-05.txt"]),
 ]
 BIG_INPUTS = [
-    ("6x6", ["input-06.txt", "input-07.txt", "input-13.txt"]),
-    ("7x7", ["input-08.txt", "input-09.txt", "input-15.txt"]),
+    ("6x6", ["input-06.txt", "input-07.txt"]),
+    ("7x7", ["input-08.txt", "input-09.txt"]),
     ("9x9", ["input-10.txt"]),
 ]
 
@@ -102,8 +102,8 @@ def run_solver(solver_cls, method_name, file_path, timeout=TIME_LIMIT):
         raise FileNotFoundError(f"Unable to parse input file: {file_path}")
 
     kb, assignment = loaded
-    queue = multiprocessing.Queue()
     ctx = multiprocessing.get_context("spawn")
+    queue = ctx.Queue()
     process = ctx.Process(target=_solver_process, args=(queue, solver_cls, method_name, kb, assignment))
     start = time.perf_counter()
     process.start()
@@ -176,7 +176,7 @@ def main():
         solver_cls, method_name = ALGORITHMS[algorithm_name]
         print(f"Running grouped test for {algorithm_name} algorithm...")
         for group_label, group_paths in grouped_inputs:
-            runs = 20 if group_label in ["4x4", "5x5"] else 10
+            runs = 20
             print(f"  Group {group_label}: {', '.join(os.path.basename(p) for p in group_paths)} ({runs} runs)")
             time_values = []
             memory_values = []
