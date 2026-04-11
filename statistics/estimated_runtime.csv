@@ -1,6 +1,0 @@
-algorithm,input1,input2,input3,input4,input5,input6,input7,input8,input9,input10,input11,input12,input13,input14,input15
-brute_force,57.88ms,145.59ms,126.83ms,144.02ms,124.45ms,21.84s,18.16s,35.09s,34.47s,489.58s,109.35ms,24.95ms,20.81s,70.73s,34.47s
-backtracking,61.79ms,135.69ms,122.35ms,171.18ms,125.63ms,39.11s,34.05s,61.05s,57.13s,435.87s,109.48ms,19.86ms,32.85s,173.77s,57.13s
-forward_chaining,112.30ms,147.06ms,142.07ms,184.26ms,163.62ms,453.48ms,433.01ms,754.34ms,734.75ms,2.25s,136.91ms,84.15ms,423.22ms,1.11s,734.75ms
-backward_chaining,76.92ms,136.81ms,125.94ms,315.96ms,276.15ms,47.91s,42.88s,83.37s,81.47s,510.61s,115.23ms,90.59ms,45.05s,143.49s,81.47s
-a_star,114.16ms,195.77ms,182.72ms,367.89ms,290.10ms,1.75s,1.60s,2.74s,2.60s,30.80s,169.66ms,76.73ms,1.53s,5.97s,2.60s
