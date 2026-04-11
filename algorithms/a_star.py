@@ -171,9 +171,9 @@ class FutoshikiSolver: # ĐÃ ĐỔI TÊN THÀNH FutoshikiSolver ĐỂ KHỚP V�
                     if on_update:
                         # KIỂM TRA ĐỂ TƯƠNG THÍCH CẢ TERMINAL (6 THAM SỐ) LẪN GUI (4 THAM SỐ)
                         try:
-                            on_update(r, c, v, "TRYING") 
+                            on_update(r, c, v, "TRYING", node.g, node.h, node.f) 
                         except TypeError:
-                            on_update(r, c, v, node.g, new_h, node.f)
+                            on_update(r, c, v, "TRYING")
 
         return False
 
