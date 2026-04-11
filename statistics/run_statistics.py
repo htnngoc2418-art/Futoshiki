@@ -77,6 +77,10 @@ def _solver_process(queue, solver_cls, method_name, kb, assignment):
     try:
         tracemalloc.start()
         solver = solver_cls(kb, assignment)
+        if hasattr(solver, "start_time"):
+            solver.start_time = time.time()
+        if hasattr(solver, "last_report_time"):
+            solver.last_report_time = solver.start_time
         method = getattr(solver, method_name)
         success = bool(method())
         current, peak = tracemalloc.get_traced_memory()
