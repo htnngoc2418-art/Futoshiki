@@ -1,0 +1,1 @@
+Đối với những số liệu có giá trị 0.0, thuật toán đã vượt timeout (120s) nên giá trị không được tính vào, không phải là thời gian giải bài toán là xấp xỉ 0s.
