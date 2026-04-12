@@ -88,10 +88,13 @@ class SLDResolutionEngine:
     
     BUILTINS = {"Less", "Greater", "Diff"}
 
-    def __init__(self, horn_kb: HornClauseKB):
+    def __init__(self, horn_kb: HornClauseKB, solver_ref=None):
         self.horn_kb = horn_kb
+        self.solver_ref = solver_ref
 
     def prove(self, goals: list, env: dict, on_update=None, depth: int = 0):
+        if self.solver_ref:
+            self.solver_ref.inferences += 1
        
         if not goals:
             yield env
@@ -271,11 +274,11 @@ class FutoshikiSolver:
         self.N = kb.N
         self.initial_assignment = initial_assignment
         self.assignment = initial_assignment.copy()
-
+        self.inferences = 0
         builder = FutoshikiHornClauseBuilder(kb, initial_assignment)
         self.horn_kb = builder.horn_kb
 
-        self.engine = SLDResolutionEngine(self.horn_kb)
+        self.engine = SLDResolutionEngine(self.horn_kb, solver_ref=self)
 
         print(f"\n[Horn Clause KB] Total clauses: {len(self.horn_kb)}")
         self._print_sample_clauses()
@@ -300,10 +303,7 @@ class FutoshikiSolver:
         return goals
 
     def backward_chaining(self, on_update=None) -> bool:
-        """
-        Chạy SLD Resolution trên top-level query.
-        Trả về True nếu tìm được solution, False nếu không.
-        """
+        self.inferences = 0
         query = self._build_top_level_query()
 
         for solution_env in self.engine.prove(query, {}, on_update):
@@ -318,11 +318,7 @@ class FutoshikiSolver:
         return False
 
     def prolog_query_single_cell(self, r: int, c: int) -> List[int]:
-        """
-        Query đơn lẻ: ?- Val(r, c, ?X)
-        Trả về tất cả giá trị hợp lệ cho ô (r, c).
-        Dùng để demo Prolog-style querying.
-        """
+        self.inferences = 0
         query = [("Val", r, c, "?X")]
         results = []
         for env in self.engine.prove(query, {}):
@@ -365,6 +361,7 @@ def main():
 
     if success:
         print(f"\n✓ Proof completed in {elapsed:.4f}s")
+        print(f"  Total inferences/expansions: {solver.inferences}")
         board_str = format_board(kb, solver.assignment)
         print(board_str)
         with open(output_file, 'w') as f:
