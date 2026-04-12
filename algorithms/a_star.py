@@ -114,7 +114,7 @@ class Node:
         return self.f < other.f or (self.f == other.f and self.g > other.g)
 
 
-class FutoshikiSolver: # ĐÃ ĐỔI TÊN THÀNH FutoshikiSolver ĐỂ KHỚP VỚI GUI
+class FutoshikiSolver: 
     def __init__(self, kb: KnowledgeBase, initial_assignment: dict):
         self.kb = kb
         self.initial_assignment = initial_assignment.copy()
@@ -126,7 +126,7 @@ class FutoshikiSolver: # ĐÃ ĐỔI TÊN THÀNH FutoshikiSolver ĐỂ KHỚP V�
                  if (r, c) not in assignment]
         return min(cells, key=lambda cell: len(domains[cell]), default=None)
 
-    def solve(self, on_update=None) -> bool: # ĐỔI RETURN TYPE THÀNH BOOL
+    def solve(self, on_update=None) -> bool: 
         kb = self.kb
         total = kb.N * kb.N
         h0 = heuristic(kb, self.initial_assignment)
@@ -145,8 +145,8 @@ class FutoshikiSolver: # ĐÃ ĐỔI TÊN THÀNH FutoshikiSolver ĐỂ KHỚP V�
             self.nodes_expanded += 1
 
             if len(cur.assignment) == total:
-                self.assignment = cur.assignment # LƯU KẾT QUẢ VÀO SELF ĐỂ GUI LẤY ĐƯỢC
-                return True # TRẢ VỀ TRUE KHI THÀNH CÔNG
+                self.assignment = cur.assignment 
+                return True 
 
             domains = compute_domains(kb, cur.assignment)
             if not ac3(kb, domains):
@@ -169,7 +169,6 @@ class FutoshikiSolver: # ĐÃ ĐỔI TÊN THÀNH FutoshikiSolver ĐỂ KHỚP V�
                     heapq.heappush(heap, (node.f, node))
                     
                     if on_update:
-                        # KIỂM TRA ĐỂ TƯƠNG THÍCH CẢ TERMINAL (6 THAM SỐ) LẪN GUI (4 THAM SỐ)
                         try:
                             on_update(r, c, v, "TRYING", node.g, node.h, node.f) 
                         except TypeError:
@@ -202,9 +201,7 @@ def main():
 
     print(f"\nTime: {elapsed:.4f}s  |  Nodes expanded: {solver.nodes_expanded}")
 
-    # Thay đổi biến 'solution' thành 'solver.assignment' khi truyền vào format_board
     if solution_found:
-        # Lấy kết quả từ solver.assignment thay vì biến solution (vốn là True/False)
         board = format_board(kb, solver.assignment) 
         print("\n--- Solved! ---\n" + board)
         with open(output_file, 'w') as f:
