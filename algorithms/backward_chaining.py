@@ -1,5 +1,9 @@
 import time
 import sys
+import os
+ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if ROOT_DIR not in sys.path:
+    sys.path.insert(0, ROOT_DIR)
 from typing import List, Dict, Tuple, Optional
 from knowledge_base import KnowledgeBase, format_board, generate_ground_kb_from_file
 
@@ -335,8 +339,12 @@ def cli_update_viewer(r, c, v, status: str):
 
 
 def main():
-    input_file  = "input-01.txt"
-    output_file = "output-01.txt"
+    import os
+
+    BASE_DIR = os.path.dirname(__file__)
+
+    input_file = os.path.join(BASE_DIR, "..", "inputs", "input-01.txt")
+    output_file = os.path.join(BASE_DIR, "..", "outputs", "output-01.txt")
 
     print("=" * 75)
     print("FUTOSHIKI SOLVER — HORN CLAUSE + SLD RESOLUTION (BACKWARD CHAINING)")
@@ -364,12 +372,14 @@ def main():
         print(f"  Total inferences/expansions: {solver.inferences}")
         board_str = format_board(kb, solver.assignment)
         print(board_str)
+
+        os.makedirs(os.path.dirname(output_file), exist_ok=True)
+
         with open(output_file, 'w') as f:
             f.write(board_str + "\n")
+
         print(f"\nSaved to {output_file}")
     else:
         print(f"\n✗ No solution found ({elapsed:.4f}s)")
-
-
 if __name__ == "__main__":
     main()
