@@ -196,6 +196,8 @@ def make_mem_exp_figure(df, suptitle, fname):
     save_fig(fig, fname, all_algos)
 
 def main():
+    import sys
+    sys.stdout.reconfigure(encoding='utf-8')
     print("Đọc dữ liệu...")
     hard_bar  = load(HARD_CSV, timeout_fill=True)   # mean_time 0.0 → 120s
     hard_line = load(HARD_CSV, timeout_fill=False)   # 0.0 → NaN (mem/exp)
