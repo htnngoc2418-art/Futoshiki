@@ -198,7 +198,7 @@ class FutoshikiGUI:
 
             if r < self.kb.N - 1:
                 for c_v in range(self.kb.N):
-                    sign_v = "v" if (r, c_v) in self.kb.facts["LessV"] else ("^" if (r, c_v) in self.kb.facts["GreaterV"] else "")
+                    sign_v = "^" if (r, c_v) in self.kb.facts["LessV"] else ("v" if (r, c_v) in self.kb.facts["GreaterV"] else "")
                     if sign_v:
                         sign_v_frame = ctk.CTkFrame(self.board_frame, width=c_size, height=s_size, fg_color="transparent")
                         sign_v_frame.grid(row=r*2+1, column=c_v*2)
