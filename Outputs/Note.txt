@@ -1,0 +1,3 @@
+Đối với 3 file input-10.txt, input-13.txt và input-15.txt: Chương trình không xuất ra được file output. Nguyên nhân là do kích thước bảng lớn, thuật toán chỉ dùng quay lui đơn thuần (không có cơ chế cắt tỉa nhánh sớm) nên bị bùng nổ tổ hợp. Việc đệ quy quá sâu bằng Python thuần khiến chương trình chạy cực kỳ lâu hoặc bị tràn bộ nhớ (Stack Overflow) trước khi tìm ra nghiệm.
+
+Đối với input-14.txt: Chương trình chạy ra kết quả là vô nghiệm.
